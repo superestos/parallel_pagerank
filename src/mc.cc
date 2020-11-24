@@ -7,7 +7,7 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
 {
     std::random_device rand_dev;
     std::mt19937 generator(rand_dev());
-    std::uniform_real_distribution<double> distribution(0.0,1.0);
+    std::uniform_real_distribution<float> distribution(0.0,1.0);
 
     for (int n = 0; n < nodes; n++) {
         value[n] = 0.0;
@@ -16,12 +16,11 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
     for (int n = 0; n < nodes; n++) {
         int cur = n;
         for (int i = 0; i < length; i++) {
-            if (distribution(generator) < alpha) {
+            if (distribution(generator) < alpha) 
                 cur = col[rowptr[cur] + (int)(distribution(generator) * rowdeg[cur])];
-            }
-            else {
+            else 
                 cur = n;
-            }
+
             value[cur] += 1;
         }
     }
