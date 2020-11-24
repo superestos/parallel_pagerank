@@ -1,5 +1,7 @@
 #include "include/pagerank.h"
 
+int MONTE_CARLO = 0;
+
 /*
 void pagerank(const int nodes, const int edges, float* value, const int* rowdeg, const int* colptr, const int* row, const int* col)
 {

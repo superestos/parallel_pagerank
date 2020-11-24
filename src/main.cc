@@ -10,7 +10,50 @@ u_int64_t GetTimeStamp() {
     return tv.tv_sec * (u_int64_t)1000000 + tv.tv_usec;
 }
 
-extern void pagerank(const int nodes, const int edges, float* value, const int* rowdeg, const int* colptr, const int* row, const int* col);
+extern void pagerank(const int nodes, const int edges, float* value, const int* rowdeg, const int* ptr, const int* row, const int* col);
+extern int MONTE_CARLO;
+
+void csc2csr(const int nodes, const int edges, const int* rowdeg, int* rowptr, int* row, int* col) 
+{
+    int* new_row = new int[edges];
+    int* new_col = new int[edges];
+    int* index = new int[nodes];
+
+    rowptr[0] = 0;
+    for (int i = 0; i < nodes; i++) {
+        rowptr[i + 1] = rowptr[i] + rowdeg[i];
+        index[i] = 0;
+    }
+
+    for (int i = 0; i < edges; i++) {
+        new_row[rowptr[row[i]] + index[row[i]]] = row[i];
+        new_col[rowptr[row[i]] + index[row[i]]] = col[i];
+        index[row[i]]++;
+    }
+
+    for (int i = 0; i < edges; i++) {
+        row[i] = new_row[i];
+        col[i] = new_col[i];
+    }
+
+    delete [] new_row;
+    delete [] new_col;
+    delete [] index;
+
+    /*
+    for (int n = 0; n < nodes; n++) {
+        for (int i = rowptr[new_row[n]]; i < rowptr[new_row[n]]; i++) {
+            int min = i;
+            for (int j = i + 1; j < rowptr[new_row[n]]; j++) {
+                if (new_col[min] > new_col[j]) {
+                    min = j;
+                }
+            }
+            std::swap(new_col[i], new_col[min]);
+        }
+    }
+    */
+}
 
 void init_data(int nodes, int edges, char *filename, float* value, int* rowdeg, int* colptr, int* row , int* col)
 {
@@ -51,18 +94,24 @@ int main(int argc, char* argv[])
 
     float* value = new float[nodes];
     int* rowdeg = new int[nodes];
-    int* colptr = new int[nodes + 1];
+    int* ptr = new int[nodes + 1];
     int* row = new int[edges];
     int* col = new int[edges];
 
-    u_int64_t start_t = GetTimeStamp();
-    init_data(nodes, edges, filename, value, rowdeg, colptr, row, col);
-    u_int64_t total_t = GetTimeStamp() - start_t;
+    u_int64_t start_t, total_t;
+
+    start_t = GetTimeStamp();
+    init_data(nodes, edges, filename, value, rowdeg, ptr, row, col);
+    total_t = GetTimeStamp() - start_t;
     printf("I/O         time usage: %d microseconds\n", total_t);
+
+    if (MONTE_CARLO) {
+        csc2csr(nodes, edges, rowdeg, ptr, row, col);
+    }
 
     start_t = GetTimeStamp();
     //for(int i = 0; i < 10; i++) {
-        pagerank(nodes, edges, value, rowdeg, colptr, row, col);
+        pagerank(nodes, edges, value, rowdeg, ptr, row, col);
     //}
     total_t = GetTimeStamp() - start_t;
     printf("Computation time usage: %d microseconds\n", total_t);

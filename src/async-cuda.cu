@@ -6,6 +6,8 @@
 #define H2D (cudaMemcpyHostToDevice)
 #define D2H (cudaMemcpyDeviceToHost)
 
+int MONTE_CARLO = 0;
+
 __global__ void compute(const int num_active_nodes, int* active_nodes, float* value, float* new_value, const int* rowdeg, const int* colptr, const int* row, const int* col)
 {
     const int tid = blockDim.x * blockIdx.x + threadIdx.x;
