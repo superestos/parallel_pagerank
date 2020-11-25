@@ -1,6 +1,6 @@
-#include "include/pagerank.h"
-
 #include <curand_kernel.h>
+
+#include "../include/pagerank.h"
 
 #define H2D (cudaMemcpyHostToDevice)
 #define D2H (cudaMemcpyDeviceToHost)

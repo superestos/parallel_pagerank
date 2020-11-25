@@ -1,7 +1,7 @@
-#include "include/pagerank.h"
-
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
+
+#include "../include/pagerank.h"
 
 #define H2D (cudaMemcpyHostToDevice)
 #define D2H (cudaMemcpyDeviceToHost)

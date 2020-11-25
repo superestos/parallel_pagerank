@@ -1,4 +1,4 @@
-#include "include/pagerank.h"
+#include "../include/pagerank.h"
 
 int MONTE_CARLO = 0;
 
