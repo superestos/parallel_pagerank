@@ -46,9 +46,11 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
     cudaMemcpy(d_row, row, sizeof(int) * edges, H2D);
     cudaMemcpy(d_col, col, sizeof(int) * edges, H2D);
 
+    const int threads_per_block = 128;
+
     for (int i = 0; i < iteration; i++) {
-        compute<<<nodes/512+1, 512>>>(nodes, edges, d_value, d_new_value, d_rowdeg, d_colptr, d_row, d_col);
-        copy_value<<<nodes/512+1, 512>>>(nodes, d_value, d_new_value);
+        compute<<<nodes/threads_per_block+1, threads_per_block>>>(nodes, edges, d_value, d_new_value, d_rowdeg, d_colptr, d_row, d_col);
+        copy_value<<<nodes/threads_per_block+1, threads_per_block>>>(nodes, d_value, d_new_value);
     }
 
     cudaMemcpy(value, d_value, sizeof(float) * nodes, D2H);
