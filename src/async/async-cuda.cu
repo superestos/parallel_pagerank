@@ -8,6 +8,9 @@
 
 int MONTE_CARLO = 0;
 
+const int threads_per_block = 128;
+
+/*
 __global__ void compute(const int num_active_nodes, int* active_nodes, float* value, float* new_value, const int* rowdeg, const int* colptr, const int* row, const int* col)
 {
     const int tid = blockDim.x * blockIdx.x + threadIdx.x;
@@ -19,6 +22,26 @@ __global__ void compute(const int num_active_nodes, int* active_nodes, float* va
         for (int e = colptr[n]; e < colptr[n + 1]; e++) {
             new_value[n] += alpha * value[row[e]] / (float)rowdeg[row[e]];
         }
+    }
+}
+*/
+
+__global__ void compute(const int num_active_nodes, int* active_nodes, float* value, float* new_value, const int* rowdeg, const int* colptr, const int* row, const int* col)
+{
+    const int tid = blockDim.x * blockIdx.x + threadIdx.x;
+
+    __shared__ float tile[threads_per_block];
+
+    tile[threadIdx.x] = 1 - alpha;
+
+    if (tid < num_active_nodes) {
+        int n = active_nodes[tid];
+
+        for (int e = colptr[n]; e < colptr[n + 1]; e++) {
+            tile[threadIdx.x] += alpha * value[row[e]] / (float)rowdeg[row[e]];
+        }
+
+        new_value[n] = tile[threadIdx.x];
     }
 }
 
@@ -69,8 +92,6 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
     for (int n = 0; n < nodes; n++) {
         active_nodes[n] = n;
     }
-
-    const int threads_per_block = 128;
 
     cudaMalloc(&d_value, sizeof(float) * nodes);
     cudaMalloc(&d_new_value, sizeof(float) * nodes);
