@@ -28,16 +28,14 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
         const int tid = omp_get_thread_num();
 
         for (int n = tid; n < nodes; n += threads) {
-            for (int j = 0; j < walkers; j++) {
-                int cur = n;
-                for (int i = 0; i < length; i++) {
-                    if (distribution(generator) < alpha) 
-                        cur = rowdeg[cur] == 0? cur: col[rowptr[cur] + (int)(distribution(generator) * rowdeg[cur])];
-                    else 
-                        cur = n;
+            int cur = n;
+            for (int i = 0; i < length; i++) {
+                if (distribution(generator) < alpha) 
+                    cur = rowdeg[cur] == 0? cur: col[rowptr[cur] + (int)(distribution(generator) * rowdeg[cur])];
+                else 
+                    cur = n;
 
-                    new_value[cur * threads + tid] += 1;
-                }
+                new_value[cur * threads + tid] += 1;
             }
         }
     }
@@ -47,7 +45,7 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
         for (int i = 0; i < threads; i++) {
             value[n] += new_value[n * threads + i];
         }
-        value[n] /= (length * walkers);
+        value[n] /= length;
     }
 
     delete [] new_value;

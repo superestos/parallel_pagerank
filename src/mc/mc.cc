@@ -15,20 +15,18 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
     }
 
     for (int n = 0; n < nodes; n++) {
-        for (int j = 0; j < walkers; j++) {
-            int cur = n;
-            for (int i = 0; i < length; i++) {
-                if (distribution(generator) < alpha) 
-                    cur = rowdeg[cur] == 0? cur: col[rowptr[cur] + (int)(distribution(generator) * rowdeg[cur])];
-                else 
-                    cur = n;
+        int cur = n;
+        for (int i = 0; i < length; i++) {
+            if (distribution(generator) < alpha) 
+                cur = rowdeg[cur] == 0? cur: col[rowptr[cur] + (int)(distribution(generator) * rowdeg[cur])];
+            else 
+                cur = n;
 
-                value[cur] += 1;
-            }
+            value[cur] += 1;
         }
     }
 
     for (int n = 0; n < nodes; n++) {
-        value[n] /= (length * walkers);
+        value[n] /= length;
     }
 }

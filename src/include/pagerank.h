@@ -13,8 +13,7 @@ const float epsilon = 0.0015; // for asynchronize update
 
 const int iteration = 50; // for synchronize update
 
-const int length = 20; // for random walk update
-const int walkers = 10;
+const int length = 100; // for random walk update
 
 u_int64_t GetTimeStamp();
 
