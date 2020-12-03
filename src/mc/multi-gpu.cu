@@ -49,41 +49,6 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
     int **d_rowptr = new int*[ngpus];
     int **d_col = new int*[ngpus];
     curandStateMRG32k3a **state = new curandStateMRG32k3a *[ngpus];
-
-    
-
-    for (int i = 0; i < ngpus; i++) {
-        cudaSetDevice(i);
-        cudaStreamCreate(&streams[i]);
-        
-        cudaMalloc(&state[i], sizeof(curandStateMRG32k3a) * nodes);
-        
-        cudaMalloc(&d_value[i], sizeof(float) * nodes);
-
-        cudaMalloc(&d_rowptr[i], sizeof(int) * (nodes + 1));
-        cudaMalloc(&d_col[i], sizeof(int) * edges);
-
-        cudaMemcpyAsync(d_rowptr[i], rowptr, sizeof(int) * (nodes + 1), H2D, streams[i]);
-        cudaMemcpyAsync(d_col[i], col, sizeof(int) * edges, H2D, streams[i]);
-
-        setup<<<nodes/threads_per_block+1, threads_per_block, 0, streams[i]>>>(nodes, d_value[i], state[i]);
-        random_walk<<<nodes/threads_per_block+1, threads_per_block, 0, streams[i]>>>(nodes, d_value[i], d_rowptr[i], d_col[i], state[i]);
-        normalize<<<nodes/threads_per_block+1, threads_per_block, 0, streams[i]>>>(nodes, d_value[i]);
-    }
-
-    for (int i = 0; i < ngpus; i++) {
-        cudaSetDevice(i);
-        cudaStreamSynchronize(streams[i]);
-    }
-
-    cudaSetDevice(0);
-    
-
-    cudaMemcpyAsync(value, d_value, sizeof(float) * nodes, D2H, streams[0]);
-
-    for (int i = 0; i < ngpus; i++) {
-        cudaFree(d_value[i]);
-    }
     
 }
 
@@ -143,11 +108,11 @@ __global__ void normalize(const int nodes, float* value)
 
 
 void pagerank(const int nodes, const int edges, float* value, const int* rowdeg, const int* rowptr, const int* row, const int* col) {
-    float *d_value;
     int *d_rowptr, *d_col;
     curandStateMRG32k3a *state;
 
-    const int threads_per_block = 512;
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
 
     cudaMalloc(&state, sizeof(curandStateMRG32k3a) * (nodes / threads_per_block + 1) * WARP_SIZE);
 
@@ -156,14 +121,14 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
     cudaMalloc(&d_rowptr, sizeof(int) * (nodes + 1));
     cudaMalloc(&d_col, sizeof(int) * edges);
 
-    cudaMemcpy(d_rowptr, rowptr, sizeof(int) * (nodes + 1), H2D);
-    cudaMemcpy(d_col, col, sizeof(int) * edges, H2D);
+    cudaMemcpyAsync(d_rowptr, rowptr, sizeof(int) * (nodes + 1), H2D, stream);
+    cudaMemcpyAsync(d_col, col, sizeof(int) * edges, H2D, stream);
 
-    setup<<<nodes/threads_per_block+1, threads_per_block>>>(nodes, d_value, state);
-    random_walk<<<nodes/threads_per_block+1, threads_per_block>>>(nodes, d_value, d_rowptr, d_col, state);
-    normalize<<<nodes/threads_per_block+1, threads_per_block>>>(nodes, d_value);
+    setup<<<nodes/threads_per_block+1, threads_per_block, 0, stream>>>(nodes, d_value, state);
+    random_walk<<<nodes/threads_per_block+1, threads_per_block, 0, stream>>>(nodes, d_value, d_rowptr, d_col, state);
+    normalize<<<nodes/threads_per_block+1, threads_per_block, 0, stream>>>(nodes, d_value);
 
-    cudaMemcpy(value, d_value, sizeof(float) * nodes, D2H);
+    cudaMemcpyAsync(value, d_value, sizeof(float) * nodes, D2H, stream);
 
     cudaFree(state);
     cudaFree(d_value);
