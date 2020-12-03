@@ -5,7 +5,7 @@
 
 int MONTE_CARLO = 0;
 
-#define threads_per_block 1024
+const int threads_per_block = 512;
 
 /* no shared memory node-centric
 __global__ void compute(const int nodes, const int edges, float* value, float* new_value, const int* rowdeg, const int* colptr, const int* row, const int* col) 

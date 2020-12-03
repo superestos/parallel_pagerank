@@ -8,7 +8,7 @@
 
 int MONTE_CARLO = 0;
 
-const int threads_per_block = 128;
+const int threads_per_block = 512;
 
 /*
 __global__ void compute(const int num_active_nodes, int* active_nodes, float* value, float* new_value, const int* rowdeg, const int* colptr, const int* row, const int* col)

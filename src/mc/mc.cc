@@ -19,7 +19,7 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
             int cur = n;
             for (int i = 0; i < length; i++) {
                 if (distribution(generator) < alpha) 
-                    cur = col[rowptr[cur] + (int)(distribution(generator) * rowdeg[cur])];
+                    cur = rowdeg[cur] == 0? cur: col[rowptr[cur] + (int)(distribution(generator) * rowdeg[cur])];
                 else 
                     cur = n;
 

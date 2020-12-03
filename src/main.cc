@@ -110,9 +110,9 @@ int main(int argc, char* argv[])
     }
 
     start_t = GetTimeStamp();
-    for(int i = 0; i < 10; i++) {
+    //for(int i = 0; i < 10; i++) {
         pagerank(nodes, edges, value, rowdeg, ptr, row, col);
-    }
+    //}
     total_t = GetTimeStamp() - start_t;
     printf("Computation time usage: %d microseconds\n", total_t);
 
