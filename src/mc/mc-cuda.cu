@@ -7,11 +7,12 @@
 
 int MONTE_CARLO = 1;
 
-__global__ void setup_rand(const int nodes, curandStateMRG32k3a *state)
+__global__ void setup(const int nodes, float* value, curandStateMRG32k3a *state)
 {
     const int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
     if (tid < nodes) {
+        value[tid] = 0;
         curand_init(0, tid, 0, &state[tid]);
     }
 }
@@ -55,14 +56,12 @@ void pagerank(const int nodes, const int edges, float* value, const int* rowdeg,
     cudaMalloc(&d_rowptr, sizeof(int) * (nodes + 1));
     cudaMalloc(&d_col, sizeof(int) * edges);
 
-    cudaMemset(&d_value, 0, sizeof(float) * nodes);
-
     cudaMemcpy(d_rowptr, rowptr, sizeof(int) * (nodes + 1), H2D);
     cudaMemcpy(d_col, col, sizeof(int) * edges, H2D);
 
-    const int threads_per_block = 128;
+    const int threads_per_block = 1024;
 
-    setup_rand<<<nodes/threads_per_block+1, threads_per_block>>>(nodes, state);
+    setup<<<nodes/threads_per_block+1, threads_per_block>>>(nodes, d_value, state);
     random_walk<<<nodes/threads_per_block+1, threads_per_block>>>(nodes, d_value, d_rowptr, d_col, state);
     normalize<<<nodes/threads_per_block+1, threads_per_block>>>(nodes, d_value);
 
